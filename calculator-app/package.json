@@ -1,0 +1,17 @@
+{
+  "name": "calculator-app",
+  "version": "1.0.0",
+  "description": "シンプルな電卓アプリケーション",
+  "main": "index.js",
+  "scripts": {
+    "start": "live-server --port=3000 --open=/public",
+    "dev": "live-server --port=3000 --open=/public --watch=src,styles",
+    "build": "echo 'Build completed'"
+  },
+  "keywords": ["calculator", "javascript", "html", "css"],
+  "author": "youki-dmp",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+} 

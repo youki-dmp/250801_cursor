@@ -1,0 +1,131 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.calculator-container {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.calculator {
+    width: 320px;
+    background: #1a1a1a;
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.display {
+    background: #2d2d2d;
+    padding: 20px;
+    text-align: right;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.previous-operand {
+    color: #888;
+    font-size: 18px;
+    margin-bottom: 5px;
+    min-height: 25px;
+}
+
+.current-operand {
+    color: #fff;
+    font-size: 36px;
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: #333;
+}
+
+.btn {
+    border: none;
+    outline: none;
+    padding: 25px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: #4a4a4a;
+    color: #fff;
+}
+
+.btn:hover {
+    background: #5a5a5a;
+    transform: scale(0.98);
+}
+
+.btn:active {
+    transform: scale(0.95);
+}
+
+.btn.clear {
+    background: #ff6b6b;
+    color: #fff;
+}
+
+.btn.clear:hover {
+    background: #ff5252;
+}
+
+.btn.operator {
+    background: #ffa726;
+    color: #fff;
+}
+
+.btn.operator:hover {
+    background: #ff9800;
+}
+
+.btn.equals {
+    background: #4caf50;
+    color: #fff;
+    grid-row: span 2;
+}
+
+.btn.equals:hover {
+    background: #45a049;
+}
+
+.btn.zero {
+    grid-column: span 2;
+}
+
+/* レスポンシブデザイン */
+@media (max-width: 480px) {
+    .calculator {
+        width: 280px;
+    }
+    
+    .btn {
+        padding: 20px;
+        font-size: 18px;
+    }
+    
+    .current-operand {
+        font-size: 30px;
+    }
+} 

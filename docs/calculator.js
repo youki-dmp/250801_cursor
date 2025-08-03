@@ -179,6 +179,9 @@ class Calculator {
                 default:
                     result = current / 100;
             }
+            // パーセント計算後は演算をクリア
+            this.operation = undefined;
+            this.previousOperand = '';
         } else {
             // 単純なパーセント計算（例：50% = 0.5）
             result = current / 100;

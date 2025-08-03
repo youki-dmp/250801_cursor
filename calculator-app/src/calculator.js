@@ -41,6 +41,9 @@ class Calculator {
                     case 'delete':
                         this.delete();
                         break;
+                    case 'percent':
+                        this.calculatePercent();
+                        break;
                 }
                 
                 this.updateDisplay();
@@ -70,6 +73,9 @@ class Calculator {
             this.delete();
         } else if (e.key === 'Escape') {
             this.clear();
+        } else if (e.key === '%') {
+            e.preventDefault();
+            this.calculatePercent();
         }
         
         this.updateDisplay();
@@ -149,6 +155,39 @@ class Calculator {
         }
     }
     
+    calculatePercent() {
+        const current = parseFloat(this.currentOperand);
+        if (isNaN(current)) return;
+        
+        let result;
+        if (this.operation && this.previousOperand !== '') {
+            // 演算中のパーセント計算（例：100 + 10% = 110）
+            const prev = parseFloat(this.previousOperand);
+            switch (this.operation) {
+                case 'add':
+                    result = prev + (prev * current / 100);
+                    break;
+                case 'subtract':
+                    result = prev - (prev * current / 100);
+                    break;
+                case 'multiply':
+                    result = prev * (current / 100);
+                    break;
+                case 'divide':
+                    result = prev / (current / 100);
+                    break;
+                default:
+                    result = current / 100;
+            }
+        } else {
+            // 単純なパーセント計算（例：50% = 0.5）
+            result = current / 100;
+        }
+        
+        this.currentOperand = result.toString();
+        this.shouldResetScreen = true;
+    }
+    
     getDisplayNumber(number) {
         const stringNumber = number.toString();
         const integerDigits = parseFloat(stringNumber.split('.')[0]);
@@ -180,8 +219,9 @@ class Calculator {
                 'multiply': '×',
                 'divide': '÷'
             };
-            this.previousOperandElement.textContent = 
-                `${this.getDisplayNumber(this.previousOperand)} ${operationSymbols[this.operation]}`;
+            // 計算式を表示（例：100 + 50 = 150）
+            const formula = `${this.getDisplayNumber(this.previousOperand)} ${operationSymbols[this.operation]} ${this.getDisplayNumber(this.currentOperand)}`;
+            this.previousOperandElement.textContent = formula;
         } else {
             this.previousOperandElement.textContent = '';
         }

@@ -7,6 +7,11 @@
 - 自動化されたGit操作
 - AI支援によるコード開発
 - 美しい電卓アプリケーション
+- ToDoリストアプリケーション
+
+## 公開ページ
+- **電卓アプリ:** [https://youki-dmp.github.io/250801_cursor/index.html](https://youki-dmp.github.io/250801_cursor/index.html)
+- **ToDoアプリ:** [https://youki-dmp.github.io/250801_cursor/todo-docs/index.html](https://youki-dmp.github.io/250801_cursor/todo-docs/index.html)
 
 ## プロジェクト構造
 
@@ -15,17 +20,19 @@ cursor_git/
 ├── .git/                          # Gitリポジトリ
 ├── .gitignore                     # Git除外設定
 ├── README.md                      # プロジェクト説明
-├── mcp-config.json               # MCP設定ファイル
-└── calculator-app/                # 電卓アプリケーション
-    ├── package.json              # 依存関係設定
-    ├── package-lock.json         # 依存関係ロックファイル
-    ├── README.md                 # 電卓アプリ説明
-    ├── public/                   # 公開ファイル
-    │   └── index.html           # メインHTMLファイル
-    ├── src/                      # ソースコード
-    │   └── calculator.js        # JavaScriptロジック
-    └── styles/                   # スタイルシート
-        └── calculator.css       # CSSスタイル
+├── mcp-config.json                # MCP設定ファイル
+├── calculator-app/                # 電卓アプリケーション（開発用）
+│   ├── ...
+├── todo-list-app/                 # ToDoリストアプリケーション（開発用）
+│   ├── ...
+└── docs/                          # 公開用ファイル
+    ├── index.html                 # 電卓アプリのHTML
+    ├── calculator.js              # 電卓アプリのJS
+    ├── calculator.css             # 電卓アプリのCSS
+    └── todo-docs/                 # ToDoアプリ
+        ├── index.html             # ToDoアプリのHTML
+        ├── todo.js                # ToDoアプリのJS
+        └── todo.css               # ToDoアプリのCSS
 ```
 
 ## セットアップ
@@ -44,10 +51,26 @@ git clone https://github.com/youki-dmp/250801_cursor.git
 cd 250801_cursor
 ```
 
-### 電卓アプリの実行
+### 開発サーバーの起動
+各アプリケーションをローカルで開発・確認する場合は、それぞれのディレクトリに移動して実行してください。
+
+#### 電卓アプリ
 ```bash
 # 電卓アプリディレクトリに移動
 cd calculator-app
+
+# 依存関係のインストール
+npm install
+
+# 開発サーバーの起動
+npm run dev
+```
+
+#### ToDoアプリ
+（ToDoアプリ用のnpmスクリプトがpackage.jsonに定義されている場合）
+```bash
+# ToDoアプリディレクトリに移動
+cd todo-list-app
 
 # 依存関係のインストール
 npm install
@@ -61,4 +84,4 @@ npm run dev
 # プロジェクトルートで
 git status
 git log --oneline
-``` 
+```

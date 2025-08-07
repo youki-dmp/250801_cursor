@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ToDoリスト</title>
+    <link rel="stylesheet" href="todo.css">
+</head>
+<body>
+    <div class="todo-container">
+        <h1>ToDoリスト</h1>
+        <div class="input-area">
+            <input type="text" id="task-input" placeholder="新しいタスクを入力">
+            <input type="date" id="due-date-input">
+            <button id="add-task-btn">追加</button>
+        </div>
+        
+        <div class="stats-area">
+            <span>本日完了したタスクの合計時間: </span>
+            <span id="total-today-time">00:00:00</span>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="active-tasks">アクティブ</button>
+            <button class="tab-btn" data-tab="completed-tasks">完了済み</button>
+        </div>
+
+        <div id="active-tasks" class="task-list-container">
+            <ul id="task-list" class="task-list"></ul>
+        </div>
+        <div id="completed-tasks" class="task-list-container" style="display: none;">
+            <ul id="completed-task-list" class="task-list"></ul>
+        </div>
+    </div>
+    <script src="todo.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Tagger</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>AI Image Tagger</h1>
+        <p>画像を選択すると、AIが自動でタグを付けます。</p>
+        
+        <div class="upload-area">
+            <input type="file" id="image-input" accept="image/*">
+            <label for="image-input">画像を選択</label>
+        </div>
+        
+        <div id="result-area" class="hidden">
+            <div class="image-container">
+                <img id="preview-image" src="#" alt="Preview">
+            </div>
+            <div class="tags-container">
+                <h2>生成されたタグ:</h2>
+                <div id="tags-output">
+                    <!-- AIが生成したタグがここに表示されます -->
+                </div>
+            </div>
+        </div>
+        
+        <div id="loading-indicator" class="hidden">
+            <p>AIが画像を解析中です...</p>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

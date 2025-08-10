@@ -10,6 +10,7 @@
 - ToDoリストアプリケーション
 
 ## 公開ページ
+- **AI画像ギャラリー:** [https://youki-dmp.github.io/250801_cursor/image-gallery/index.html](https://youki-dmp.github.io/250801_cursor/image-gallery/index.html)
 - **電卓アプリ:** [https://youki-dmp.github.io/250801_cursor/index.html](https://youki-dmp.github.io/250801_cursor/index.html)
 - **ToDoアプリ:** [https://youki-dmp.github.io/250801_cursor/todo-docs/index.html](https://youki-dmp.github.io/250801_cursor/todo-docs/index.html)
 
@@ -26,13 +27,17 @@ cursor_git/
 ├── todo-list-app/                 # ToDoリストアプリケーション（開発用）
 │   ├── ...
 └── docs/                          # 公開用ファイル
+    ├── image-gallery/             # AI画像ギャラリー
+    │   ├── index.html
+    │   ├── style.css
+    │   └── script.js
     ├── index.html                 # 電卓アプリのHTML
     ├── calculator.js              # 電卓アプリのJS
     ├── calculator.css             # 電卓アプリのCSS
     └── todo-docs/                 # ToDoアプリ
-        ├── index.html             # ToDoアプリのHTML
-        ├── todo.js                # ToDoアプリのJS
-        └── todo.css               # ToDoアプリのCSS
+        ├── index.html
+        ├── todo.js
+        └── todo.css
 ```
 
 ## セットアップ

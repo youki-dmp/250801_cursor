@@ -15,25 +15,41 @@ document.addEventListener('DOMContentLoaded', () => {
         resultArea.classList.add('hidden');
         tagsOutput.innerHTML = '';
 
-        // Show preview
         const reader = new FileReader();
-        reader.onload = (e) => {
-            previewImage.src = e.target.result;
+        reader.onload = async (e) => {
+            const imageData = e.target.result;
+            previewImage.src = imageData;
             resultArea.classList.remove('hidden');
+            loadingIndicator.classList.remove('hidden');
+
+            try {
+                const response = await fetch('/api/generate-tags', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ imageData }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.tags) {
+                    displayTags(data.tags);
+                } else {
+                    throw new Error('Invalid response from API');
+                }
+
+            } catch (error) {
+                console.error('Error calling API:', error);
+                alert('タグの生成に失敗しました。コンソールを確認してください。');
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
         };
         reader.readAsDataURL(file);
-
-        // --- ここからAI連携処理を後で追加 ---
-        // Show loading indicator
-        loadingIndicator.classList.remove('hidden');
-
-        // Simulate AI processing
-        setTimeout(() => {
-            const dummyTags = ['風景', '空', '青', '自然', 'サンプル'];
-            displayTags(dummyTags);
-            loadingIndicator.classList.add('hidden');
-        }, 2000);
-        // --- ここまでがダミー処理 ---
     });
 
     function displayTags(tags) {

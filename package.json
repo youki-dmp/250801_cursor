@@ -1,0 +1,26 @@
+{
+  "name": "cursor_git",
+  "version": "1.0.0",
+  "description": "このプロジェクトは、Cursor IDEとGitHubの連携をテストするためのプロジェクトです。",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/youki-dmp/250801_cursor.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/youki-dmp/250801_cursor/issues"
+  },
+  "homepage": "https://github.com/youki-dmp/250801_cursor#readme",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1"
+  }
+}

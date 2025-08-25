@@ -8,8 +8,10 @@
 - AI支援によるコード開発
 - 美しい電卓アプリケーション
 - ToDoリストアプリケーション
+- **NEW!** AIと開発した2Dランナーゲーム
 
 ## 公開ページ
+- **ランナーゲーム (Ver 0.3):** [こちらでプレイできます](./docs/runner-game-v0.3/index.html)
 - **AI画像ギャラリー:** [https://youki-dmp.github.io/250801_cursor/image-gallery/index.html](https://youki-dmp.github.io/250801_cursor/image-gallery/index.html)
 - **電卓アプリ:** [https://youki-dmp.github.io/250801_cursor/index.html](https://youki-dmp.github.io/250801_cursor/index.html)
 - **ToDoアプリ:** [https://youki-dmp.github.io/250801_cursor/todo-docs/index.html](https://youki-dmp.github.io/250801_cursor/todo-docs/index.html)
@@ -21,23 +23,25 @@ cursor_git/
 ├── .git/                          # Gitリポジトリ
 ├── .gitignore                     # Git除外設定
 ├── README.md                      # プロジェクト説明
+├── REPLICATION_PROMPT.md          # AIによるゲーム開発再現プロンプト
 ├── mcp-config.json                # MCP設定ファイル
+├── runner-game/                   # ランナーゲーム（開発用）
+│   ├── ...
 ├── calculator-app/                # 電卓アプリケーション（開発用）
 │   ├── ...
 ├── todo-list-app/                 # ToDoリストアプリケーション（開発用）
 │   ├── ...
 └── docs/                          # 公開用ファイル
-    ├── image-gallery/             # AI画像ギャラリー
+    ├── runner-game-v0.3/          # ランナーゲーム v0.3
     │   ├── index.html
     │   ├── style.css
-    │   └── script.js
+    │   └── game.js
+    ├── image-gallery/             # AI画像ギャラリー
+    │   ├── ...
     ├── index.html                 # 電卓アプリのHTML
-    ├── calculator.js              # 電卓アプリのJS
-    ├── calculator.css             # 電卓アプリのCSS
+    ├── ...
     └── todo-docs/                 # ToDoアプリ
-        ├── index.html
-        ├── todo.js
-        └── todo.css
+        ├── ...
 ```
 
 ## セットアップ

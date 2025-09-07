@@ -1,4 +1,4 @@
-// Version: 0.3
+// Version: 0.4 (Responsive)
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const jumpButton = document.getElementById('jumpButton');
@@ -14,8 +14,8 @@ const backgroundColors = ['#eeeeee', '#e0f7fa', '#fff9c4', '#ffcdd2', '#d1c4e9']
 
 // --- Player State ---
 const player = {
-    x: 150,
-    y: canvas.height,
+    x: 150, // Will be updated on resize
+    y: 0,   // Will be updated on resize
     width: 40,
     height: 50,
     velocityY: 0,
@@ -45,16 +45,28 @@ let obstacleInterval = 90;
 let gameSpeed = initialGameSpeed;
 
 // --- Ground ---
-const groundY = canvas.height - 20;
+let groundY;
 
-// --- RESET GAME ---
+// --- RESIZE and RESET ---
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+    groundY = canvas.height - 20;
+    player.x = canvas.width / 5;
+
+    // If player is on the ground, reset their Y position to the new ground.
+    if (!player.isJumping) {
+        player.y = groundY;
+    }
+}
+
 function resetGame() {
     const savedHighScore = localStorage.getItem('runnerHighScore');
     if (savedHighScore) {
         highScore = parseInt(savedHighScore, 10);
     }
 
-    player.y = canvas.height;
     player.velocityY = 0;
     player.isJumping = false;
     player.isJumpKeyDown = false;
@@ -69,10 +81,15 @@ function resetGame() {
     gameOver = false;
     obstacleTimer = 0;
     gameSpeed = initialGameSpeed;
+    
+    resizeCanvas(); // Set initial canvas size and player position
+    
     requestAnimationFrame(gameLoop);
 }
 
 // --- EVENT LISTENERS ---
+window.addEventListener('resize', resizeCanvas);
+
 function handleJumpStart() {
     if (gameOver) return;
     if (!player.isJumping) {
@@ -242,9 +259,13 @@ function drawObstacles() {
 function drawUI() {
     ctx.fillStyle = 'black';
     ctx.font = '20px Arial';
+    ctx.textAlign = 'left';
     ctx.fillText(`Score: ${Math.floor(score)}`, 10, 25);
     ctx.fillText(`High Score: ${highScore}`, 10, 50);
-    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 100, 25);
+
+    ctx.textAlign = 'right';
+    ctx.fillText(`Speed: ${gameSpeed.toFixed(1)}`, canvas.width - 10, 25);
+    ctx.textAlign = 'left'; // Reset align
 
     if (gameOver) {
         ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -410,6 +431,7 @@ function update() {
 function gameLoop() {
     if (gameOver) {
         draw();
+        // Stop the loop if game is over
         return;
     }
     update();

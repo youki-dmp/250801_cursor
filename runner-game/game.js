@@ -336,53 +336,109 @@ function updateObstacleAnimations() {
     });
 }
 
+// --- Obstacle Pattern Generation ---
+
+function createSingleLowObstacle() {
+    const h = Math.random() * 40 + 20;
+    const newObstacle = { x: canvas.width, y: groundY - h, width: 20, height: h, type: 'low' };
+    if (h > 40) { // It's a jumping frog
+        newObstacle.isJumping = true;
+        newObstacle.animOffsetY = 0;
+        newObstacle.animVelY = -4;
+        newObstacle.animGravity = 0.2;
+    }
+    obstacles.push(newObstacle);
+}
+
+function createSingleHighObstacle() {
+    const subType = Math.random() < 0.5 ? 'goldfish' : 'taiyaki';
+    obstacles.push({ x: canvas.width, y: groundY - 80, width: 30, height: 50, type: 'high', subType: subType });
+}
+
+function createSingleCeilingObstacle() {
+    const h = Math.random() * 50 + 20;
+    obstacles.push({ x: canvas.width, y: 0, width: 25, height: h, type: 'ceiling' });
+}
+
+function createDoubleLowObstacle() {
+    const h1 = Math.random() * 30 + 20;
+    const h2 = Math.random() * 30 + 20;
+    const gap = Math.random() * 60 + 90 + (gameSpeed * 4);
+    obstacles.push({ x: canvas.width, y: groundY - h1, width: 20, height: h1, type: 'low' });
+    obstacles.push({ x: canvas.width + gap, y: groundY - h2, width: 20, height: h2, type: 'low' });
+}
+
+function createWideLowObstacle() {
+    const h = Math.random() * 25 + 20;
+    const gap = Math.random() * 20 + 75;
+    const firstObstacleWidth = 20;
+    obstacles.push({ x: canvas.width, y: groundY - h, width: firstObstacleWidth, height: h, type: 'low' });
+    obstacles.push({ x: canvas.width + firstObstacleWidth + gap, y: groundY - h, width: 20, height: h, type: 'low' });
+}
+
+function createTripleLowObstacle() {
+    const h = Math.random() * 25 + 20;
+    const gap = Math.random() * 50 + 100 + (gameSpeed * 3);
+    obstacles.push({ x: canvas.width, y: groundY - h, width: 20, height: h, type: 'low' });
+    obstacles.push({ x: canvas.width + gap, y: groundY - h, width: 20, height: h, type: 'low' });
+    obstacles.push({ x: canvas.width + gap * 2, y: groundY - h, width: 20, height: h, type: 'low' });
+}
+
+function createLowAndCeilingObstacle() {
+    const lowHeight = Math.random() * 30 + 20;
+    const ceilingHeight = Math.random() * 40 + 20;
+    const gap = Math.random() * 40 + 120;
+    obstacles.push({ x: canvas.width, y: groundY - lowHeight, width: 20, height: lowHeight, type: 'low' });
+    obstacles.push({ x: canvas.width + gap, y: 0, width: 25, height: ceilingHeight, type: 'ceiling' });
+}
+
+
 function updateObstacles() {
     obstacleTimer++;
     if (obstacleTimer >= obstacleInterval) {
-        const patternType = Math.random();
         const canShowComplexPatterns = gameSpeed > 5;
+        const canShowHardcorePatterns = gameSpeed > 7;
 
-        if (patternType < 0.5 || !canShowComplexPatterns) { // Basic patterns are more common, especially at start
-            const obstacleTypeRoll = Math.random();
-            if (obstacleTypeRoll < 0.6) { // Single low
-                 const h = Math.random() * 40 + 20;
-                 const newObstacle = { x: canvas.width, y: groundY - h, width: 20, height: h, type: 'low' };
-                 if (h > 40) { // It's a jumping frog
-                    newObstacle.isJumping = true;
-                    newObstacle.animOffsetY = 0;
-                    newObstacle.animVelY = -4; // Initial jump velocity for the frog animation
-                    newObstacle.animGravity = 0.2;
-                 }
-                 obstacles.push(newObstacle);
-            } else if (obstacleTypeRoll < 0.85) { // Single high
-                 const subType = Math.random() < 0.5 ? 'goldfish' : 'taiyaki';
-                 obstacles.push({ x: canvas.width, y: groundY - 80, width: 30, height: 50, type: 'high', subType: subType });
-            } else { // Single ceiling
-                 const h = Math.random() * 50 + 20;
-                 obstacles.push({ x: canvas.width, y: 0, width: 25, height: h, type: 'ceiling' });
+        const patternRoll = Math.random();
+        let patternChosen = false;
+
+        if (canShowHardcorePatterns && patternRoll < 0.25) {
+            const hardcorePatternRoll = Math.random();
+            if (hardcorePatternRoll < 0.5) {
+                createTripleLowObstacle();
+            } else {
+                createLowAndCeilingObstacle();
             }
-        } else if (patternType < 0.75) { // Double low for continuous jumps
-            const h1 = Math.random() * 30 + 20;
-            const h2 = Math.random() * 30 + 20;
-            // Wider gap for more reaction time, especially at lower speeds.
-            const gap = Math.random() * 60 + 90 + (gameSpeed * 4);
-            obstacles.push({ x: canvas.width, y: groundY - h1, width: 20, height: h1, type: 'low' });
-            obstacles.push({ x: canvas.width + gap, y: groundY - h2, width: 20, height: h2, type: 'low' });
-        } else { // Two low obstacles to jump over in one go
-            const h = Math.random() * 25 + 20;
-            // Narrower gap to make it possible to jump over both.
-            const gap = Math.random() * 20 + 75;
-            const firstObstacleWidth = 20;
-            obstacles.push({ x: canvas.width, y: groundY - h, width: firstObstacleWidth, height: h, type: 'low' });
-            obstacles.push({ x: canvas.width + firstObstacleWidth + gap, y: groundY - h, width: 20, height: h, type: 'low' });
+            patternChosen = true;
+        }
+        
+        if (!patternChosen && canShowComplexPatterns && patternRoll < 0.5) {
+            const complexPatternRoll = Math.random();
+            if (complexPatternRoll < 0.5) {
+                createDoubleLowObstacle();
+            } else {
+                createWideLowObstacle();
+            }
+            patternChosen = true;
+        }
+
+        if (!patternChosen) { // Basic patterns
+            const basicPatternRoll = Math.random();
+            if (basicPatternRoll < 0.6) {
+                createSingleLowObstacle();
+            } else if (basicPatternRoll < 0.85) {
+                createSingleHighObstacle();
+            } else {
+                createSingleCeilingObstacle();
+            }
         }
 
         obstacleTimer = 0;
-        // Make interval calculation a bit more dynamic
         const baseInterval = 900 / gameSpeed;
-        const randomFactor = baseInterval * 0.6; // randomness is proportional to speed
-        obstacleInterval = baseInterval + (Math.random() * randomFactor) - (randomFactor / 2); // Centered randomness
+        const randomFactor = baseInterval * 0.6;
+        obstacleInterval = baseInterval + (Math.random() * randomFactor) - (randomFactor / 2);
     }
+
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= gameSpeed;
         if (obstacles[i].x + obstacles[i].width < 0) {

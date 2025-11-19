@@ -150,27 +150,39 @@ function drawObstacles() {
 
         switch (obstacle.type) {
             case 'low': // Frog
+                ctx.save();
+                // Anchor drawing to the center-bottom of the obstacle's box
+                ctx.translate(obstacle.width / 2, obstacle.height);
+
+                // Body (a semicircle centered at the new origin)
                 ctx.fillStyle = '#4caf50'; // Green
-                // Draw a single, consistent frog sprite
-                // Body
                 ctx.beginPath();
-                ctx.arc(obstacle.width / 2, obstacle.height, obstacle.width / 2, Math.PI, 2 * Math.PI);
+                ctx.arc(0, 0, obstacle.width / 2, Math.PI, 2 * Math.PI);
                 ctx.fill();
-                // Eyes
+
+                // Eyes (relative to the body's center)
+                const eyeOffsetY = -obstacle.height * 0.5;
+                const eyeOffsetX = obstacle.width * 0.2;
+                
+                // White part of eyes
                 ctx.fillStyle = 'white';
                 ctx.beginPath();
-                ctx.arc(obstacle.width * 0.3, obstacle.height * 0.5, 5, 0, 2 * Math.PI);
+                ctx.arc(-eyeOffsetX, eyeOffsetY, 5, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(obstacle.width * 0.7, obstacle.height * 0.5, 5, 0, 2 * Math.PI);
+                ctx.arc(eyeOffsetX, eyeOffsetY, 5, 0, 2 * Math.PI);
                 ctx.fill();
+
+                // Pupils
                 ctx.fillStyle = 'black';
                 ctx.beginPath();
-                ctx.arc(obstacle.width * 0.3, obstacle.height * 0.5, 2, 0, 2 * Math.PI);
+                ctx.arc(-eyeOffsetX, eyeOffsetY, 2, 0, 2 * Math.PI);
                 ctx.fill();
                 ctx.beginPath();
-                ctx.arc(obstacle.width * 0.7, obstacle.height * 0.5, 2, 0, 2 * Math.PI);
+                ctx.arc(eyeOffsetX, eyeOffsetY, 2, 0, 2 * Math.PI);
                 ctx.fill();
+
+                ctx.restore();
                 break;
 
             case 'high':

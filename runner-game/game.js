@@ -1,16 +1,20 @@
-// Version: 0.4 (Responsive)
+// Version: 0.5 (Double Jump & More Patterns)
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const jumpButton = document.getElementById('jumpButton');
+const milestoneNotification = document.getElementById('milestone-notification');
 
 // --- Game Configuration ---
 const gravity = 0.8;
 const initialJumpStrength = -10;
+const doubleJumpStrength = -12; // A bit stronger for the second jump
 const jumpHoldStrength = 0.5;
 const maxJumpHoldFrames = 12;
 const initialGameSpeed = 4;
 const maxGameSpeed = 10;
 const backgroundColors = ['#eeeeee', '#e0f7fa', '#fff9c4', '#ffcdd2', '#d1c4e9'];
+const minObstacleGap = 250; // Obstacle generation gap
+const maxObstacles = 3;     // Max obstacles on screen at once
 
 // --- Player State ---
 const player = {
@@ -20,6 +24,10 @@ const player = {
     height: 50,
     velocityY: 0,
     isJumping: false,
+    jumpCount: 0,
+    maxJumps: 2,
+    isSpinning: false,
+    rotation: 0,
     isJumpKeyDown: false,
     jumpHoldFrames: 0,
     animationFrames: [
@@ -40,9 +48,10 @@ let scoreLevel = 0;
 let speedLevel = 0;
 let backgroundColorIndex = 0;
 let gameOver = false;
-let obstacleTimer = 0;
-let obstacleInterval = 90;
 let gameSpeed = initialGameSpeed;
+let obstacleTimer = 0;
+let obstacleInterval = 120; // Initial interval before the first obstacle
+let lastMilestone = 0;
 
 // --- Ground ---
 let groundY;
@@ -69,6 +78,9 @@ function resetGame() {
 
     player.velocityY = 0;
     player.isJumping = false;
+    player.jumpCount = 0;
+    player.isSpinning = false;
+    player.rotation = 0;
     player.isJumpKeyDown = false;
     player.jumpHoldFrames = 0;
     player.ahogeAngle = 0.3;
@@ -80,7 +92,9 @@ function resetGame() {
     backgroundColorIndex = 0;
     gameOver = false;
     obstacleTimer = 0;
+    obstacleInterval = 120; // Reset interval
     gameSpeed = initialGameSpeed;
+    lastMilestone = 0;
     
     resizeCanvas(); // Set initial canvas size and player position
     
@@ -92,9 +106,15 @@ window.addEventListener('resize', resizeCanvas);
 
 function handleJumpStart() {
     if (gameOver) return;
-    if (!player.isJumping) {
-        player.velocityY = initialJumpStrength;
+    if (player.jumpCount < player.maxJumps) {
+        if (player.jumpCount === 1) { // This is the second jump
+            player.velocityY = doubleJumpStrength;
+            player.isSpinning = true;
+        } else { // This is the first jump
+            player.velocityY = initialJumpStrength;
+        }
         player.isJumping = true;
+        player.jumpCount++;
     }
     player.isJumpKeyDown = true;
 }
@@ -118,6 +138,14 @@ function drawPlayer() {
     const playerDrawX = player.x - frame.w / 2;
     const playerDrawY = player.y - frame.h;
 
+    ctx.save();
+    // Translate and rotate for the spinning double jump
+    if (player.isSpinning) {
+        ctx.translate(player.x, player.y - frame.h / 2);
+        ctx.rotate(player.rotation);
+        ctx.translate(-player.x, -(player.y - frame.h / 2));
+    }
+
     // 1. Draw the blue body as the base
     ctx.fillStyle = 'blue';
     ctx.fillRect(playerDrawX, playerDrawY, frame.w, frame.h);
@@ -133,29 +161,33 @@ function drawPlayer() {
     ctx.fillRect(playerDrawX + sideMargin, playerDrawY, strapWidth, strapHeight);
     ctx.fillRect(playerDrawX + frame.w - sideMargin - strapWidth, playerDrawY, strapWidth, strapHeight);
 
-        // 3. Draw the neckline detail on the tank top's edge
+    // 3. Draw the neckline detail on the tank top's edge
     const neckDetailSize = 4;
     const neckDetailY = chestY - (neckDetailSize / 2); // Center it on the edge
     ctx.fillRect(player.x - neckDetailSize / 2, neckDetailY, neckDetailSize, neckDetailSize);
 
-    // 4. Draw the ahoge (cowlick)
-    ctx.save();
-    ctx.translate(player.x, playerDrawY); // Move origin to top-center of head
-    if (player.isJumping) {
-        ctx.scale(-1, 1); // Flip horizontally if jumping
+    // 4. Draw the ahoge (cowlick) - but not if spinning
+    if (!player.isSpinning) {
+        ctx.save();
+        ctx.translate(player.x, playerDrawY); // Move origin to top-center of head
+        if (player.isJumping) {
+            ctx.scale(-1, 1); // Flip horizontally if jumping
+        }
+        ctx.rotate(player.ahogeAngle);
+        
+        // Draw a "く" shape
+        ctx.strokeStyle = 'blue';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(-4, -8);
+        ctx.lineTo(0, -16);
+        ctx.stroke();
+        
+        ctx.restore();
     }
-    ctx.rotate(player.ahogeAngle);
     
-    // Draw a "く" shape
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(0, 0);
-    ctx.lineTo(-4, -8);
-    ctx.lineTo(0, -16);
-    ctx.stroke();
-    
-    ctx.restore();
+    ctx.restore(); // Restore context after potential rotation
 }
 
 function drawObstacles() {
@@ -307,6 +339,11 @@ function updatePlayer() {
         player.ahogeDirection *= -1;
     }
 
+    // Spin animation
+    if (player.isSpinning) {
+        player.rotation += 0.3; // Adjust rotation speed as needed
+    }
+
     // Variable Jump
     if (player.isJumpKeyDown && player.jumpHoldFrames < maxJumpHoldFrames) {
         player.velocityY -= jumpHoldStrength;
@@ -318,6 +355,9 @@ function updatePlayer() {
         player.isJumping = false;
         player.velocityY = 0;
         player.jumpHoldFrames = 0;
+        player.jumpCount = 0; // Reset jump count on landing
+        player.isSpinning = false; // Stop spinning on landing
+        player.rotation = 0; // Reset rotation
     } else {
         player.velocityY += gravity;
     }
@@ -392,53 +432,54 @@ function createLowAndCeilingObstacle() {
     obstacles.push({ x: canvas.width + gap, y: 0, width: 25, height: ceilingHeight, type: 'ceiling' });
 }
 
+function createHighAndLowObstacle() {
+    const lowHeight = Math.random() * 30 + 20;
+    const subType = Math.random() < 0.5 ? 'goldfish' : 'taiyaki';
+    const gap = Math.random() * 50 + 150 + (gameSpeed * 5);
+    obstacles.push({ x: canvas.width, y: groundY - 80, width: 30, height: 50, type: 'high', subType: subType });
+    obstacles.push({ x: canvas.width + gap, y: groundY - lowHeight, width: 20, height: lowHeight, type: 'low' });
+}
+
 
 function updateObstacles() {
     obstacleTimer++;
+
+    // Time to generate a new obstacle pattern?
     if (obstacleTimer >= obstacleInterval) {
-        const canShowComplexPatterns = gameSpeed > 5;
-        const canShowHardcorePatterns = gameSpeed > 7;
+        const availableSlots = maxObstacles - obstacles.length;
 
-        const patternRoll = Math.random();
-        let patternChosen = false;
+        if (availableSlots > 0) {
+            const patternFunctions = [
+                { func: createSingleLowObstacle, count: 1 },
+                { func: createSingleHighObstacle, count: 1 },
+                { func: createSingleCeilingObstacle, count: 1 },
+                { func: createDoubleLowObstacle, count: 2 },
+                { func: createWideLowObstacle, count: 2 },
+                { func: createLowAndCeilingObstacle, count: 2 },
+                { func: createHighAndLowObstacle, count: 2 },
+                { func: createTripleLowObstacle, count: 3 }
+            ];
 
-        if (canShowHardcorePatterns && patternRoll < 0.25) {
-            const hardcorePatternRoll = Math.random();
-            if (hardcorePatternRoll < 0.5) {
-                createTripleLowObstacle();
-            } else {
-                createLowAndCeilingObstacle();
-            }
-            patternChosen = true;
-        }
-        
-        if (!patternChosen && canShowComplexPatterns && patternRoll < 0.5) {
-            const complexPatternRoll = Math.random();
-            if (complexPatternRoll < 0.5) {
-                createDoubleLowObstacle();
-            } else {
-                createWideLowObstacle();
-            }
-            patternChosen = true;
-        }
+            // Filter patterns that fit in the available slots
+            const possiblePatterns = patternFunctions.filter(p => p.count <= availableSlots);
 
-        if (!patternChosen) { // Basic patterns
-            const basicPatternRoll = Math.random();
-            if (basicPatternRoll < 0.6) {
-                createSingleLowObstacle();
-            } else if (basicPatternRoll < 0.85) {
-                createSingleHighObstacle();
-            } else {
-                createSingleCeilingObstacle();
+            if (possiblePatterns.length > 0) {
+                // Choose a random pattern from the possible ones
+                const pattern = possiblePatterns[Math.floor(Math.random() * possiblePatterns.length)];
+                pattern.func();
+
+                // Reset timer and set a new random interval
+                obstacleTimer = 0;
+                const baseInterval = 900 / gameSpeed;
+                const randomFactor = baseInterval * 0.6;
+                obstacleInterval = baseInterval + (Math.random() * randomFactor) - (randomFactor / 2);
+                // Ensure interval is not too short, to prevent immediate re-triggering
+                obstacleInterval = Math.max(obstacleInterval, minObstacleGap / gameSpeed);
             }
         }
-
-        obstacleTimer = 0;
-        const baseInterval = 900 / gameSpeed;
-        const randomFactor = baseInterval * 0.6;
-        obstacleInterval = baseInterval + (Math.random() * randomFactor) - (randomFactor / 2);
     }
 
+    // Move existing obstacles
     for (let i = obstacles.length - 1; i >= 0; i--) {
         obstacles[i].x -= gameSpeed;
         if (obstacles[i].x + obstacles[i].width < 0) {
@@ -451,6 +492,8 @@ function checkCollisions() {
     const playerFrame = player.animationFrames[player.currentFrame];
     const playerHitbox = { x: player.x - playerFrame.w / 2, y: player.y - playerFrame.h, width: playerFrame.w, height: playerFrame.h };
     for (const obstacle of obstacles) {
+        // A simple bounding box collision check is not accurate for a rotated player.
+        // For this game, we'll check collision against the un-rotated hitbox, which is a good enough approximation.
         if (playerHitbox.x < obstacle.x + obstacle.width && playerHitbox.x + playerHitbox.width > obstacle.x && playerHitbox.y < obstacle.y + obstacle.height && playerHitbox.y + playerHitbox.height > obstacle.y) {
             gameOver = true;
             player.isJumpKeyDown = false;
@@ -469,6 +512,18 @@ function update() {
     updateObstacleAnimations();
     checkCollisions();
     score += 1;
+
+    // Check for 1000-point milestone
+    if (Math.floor(score) >= (lastMilestone + 1) * 1000) {
+        lastMilestone++;
+        milestoneNotification.textContent = `${lastMilestone * 1000}`;
+        milestoneNotification.classList.add('show');
+
+        // Remove the class after the animation finishes (2.5s)
+        setTimeout(() => {
+            milestoneNotification.classList.remove('show');
+        }, 2500);
+    }
 
     const currentBgLevel = Math.floor(score / 500);
     if (currentBgLevel > scoreLevel) {

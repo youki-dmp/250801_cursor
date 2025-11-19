@@ -9,13 +9,69 @@ body {
     font-family: sans-serif;
 }
 
+/* Add a container to position the notification */
+#game-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+}
+
 canvas {
     border: 2px solid #333;
     box-shadow: 5px 5px 10px rgba(0,0,0,0.2);
-    width: 90%;
-    max-width: 800px;
+    width: 100%; /* Make canvas fill the container */
     height: auto;
     aspect-ratio: 4 / 1;
+    display: block;
+}
+
+#milestone-notification {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    color: #ffc107;
+    font-size: 12vw; /* Responsive font size */
+    font-weight: bold;
+    text-shadow: 
+        -3px -3px 0 #000, 3px -3px 0 #000,
+        -3px 3px 0 #000, 3px 3px 0 #000,
+        -6px -6px 8px #ff4500, 6px -6px 8px #ff4500,
+        -6px 6px 8px #ff4500, 6px 6px 8px #ff4500;
+    opacity: 0;
+    pointer-events: none; /* So it doesn't block clicks */
+    z-index: 100;
+    transition: opacity 0.5s ease-out;
+    white-space: nowrap;
+}
+
+#milestone-notification.show {
+    animation: pachinko-effect 2.5s ease-out forwards;
+}
+
+@keyframes pachinko-effect {
+    0% {
+        transform: translate(-50%, -50%) scale(0.5);
+        opacity: 0;
+    }
+    20% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+    35% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    85% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(0.9);
+        opacity: 0;
+    }
 }
 
 #jumpButton {
@@ -45,8 +101,16 @@ canvas {
 }
 
 @media (max-width: 768px) {
+    #game-container {
+        width: 95%;
+    }
+
     canvas {
         aspect-ratio: 3 / 2;
+    }
+    
+    #milestone-notification {
+        font-size: 20vw;
     }
 
     .controls {

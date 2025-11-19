@@ -11,7 +11,7 @@
 - **NEW!** AIと開発した2Dランナーゲーム
 
 ## 公開ページ
-- **ランナーゲーム (Ver 0.3):** [こちらでプレイできます](./docs/runner-game-v0.3/index.html)
+- **ランナーゲーム:** [こちらでプレイできます](https://youki-dmp.github.io/250801_cursor/runner-game/)
 - **AI画像ギャラリー:** [https://youki-dmp.github.io/250801_cursor/image-gallery/index.html](https://youki-dmp.github.io/250801_cursor/image-gallery/index.html)
 - **電卓アプリ:** [https://youki-dmp.github.io/250801_cursor/index.html](https://youki-dmp.github.io/250801_cursor/index.html)
 - **ToDoアプリ:** [https://youki-dmp.github.io/250801_cursor/todo-docs/index.html](https://youki-dmp.github.io/250801_cursor/todo-docs/index.html)
@@ -32,7 +32,7 @@ cursor_git/
 ├── todo-list-app/                 # ToDoリストアプリケーション（開発用）
 │   ├── ...
 └── docs/                          # 公開用ファイル
-    ├── runner-game-v0.3/          # ランナーゲーム v0.3
+    ├── runner-game/               # ランナーゲーム
     │   ├── index.html
     │   ├── style.css
     │   └── game.js

@@ -8,10 +8,45 @@ body {
     margin: 0;
     font-family: sans-serif;
 }
+ 
+#special-notification {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #ff4500;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    padding: 1rem;
+    border-radius: 10px;
+    background: linear-gradient(45deg, #ffc107, #ffeb3b);
+    opacity: 0;
+    transform: translateY(-50px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    position: absolute;
+    top: 1rem;
+    z-index: 200;
+    text-align: center;
+}
+
+#special-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Add a container to position the notification */
+#game-container {
+    position: relative;
+    width: 90%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+}
 
 canvas {
     border: 2px solid #333;
     box-shadow: 5px 5px 10px rgba(0,0,0,0.2);
+    width: 100%; /* Make canvas fill the container */
+    height: auto;
+    aspect-ratio: 4 / 1;
+    display: block;
 }
 
 #jumpButton {
@@ -32,4 +67,34 @@ canvas {
     /* ボタンを押した時に少し沈むように見せる */
     transform: translateY(4px);
     box-shadow: 0 0 #0056b3;
+}
+
+.controls {
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+@media (max-width: 768px) {
+    #game-container {
+        width: 95%;
+    }
+
+    canvas {
+        aspect-ratio: 3 / 2;
+    }
+    
+    #milestone-notification {
+        font-size: 20vw;
+    }
+
+    .controls {
+        display: none;
+    }
+
+    #jumpButton {
+        width: 80%;
+        padding: 20px;
+        font-size: 1.5rem;
+    }
 }

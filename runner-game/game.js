@@ -2,7 +2,7 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const jumpButton = document.getElementById('jumpButton');
-const milestoneNotification = document.getElementById('milestone-notification');
+const specialNotification = document.getElementById('special-notification');
 
 // --- Game Configuration ---
 const gravity = 0.8;
@@ -53,6 +53,20 @@ let obstacleTimer = 0;
 let obstacleInterval = 120; // Initial interval before the first obstacle
 let lastMilestone = 0;
 
+// --- Milestone Animation State ---
+const milestoneAnimation = {
+    isActive: false,
+    progress: 0,
+    duration: 1.2 * 60, // 1.2 seconds in frames (assuming 60fps)
+    text: "",
+    color: "red", // Default color
+};
+
+// --- Confetti State --- 👈 ここから追加
+let confettiParticles = [];
+const maxConfetti = 150;
+const confettiColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3', '#ffffff', '#cccccc'];
+
 // --- Ground ---
 let groundY;
 
@@ -95,6 +109,7 @@ function resetGame() {
     obstacleInterval = 120; // Reset interval
     gameSpeed = initialGameSpeed;
     lastMilestone = 0;
+    confettiParticles = [];
     
     resizeCanvas(); // Set initial canvas size and player position
     
@@ -315,14 +330,148 @@ function drawUI() {
     }
 }
 
+function drawMilestoneAnimation() {
+    if (!milestoneAnimation.isActive) return;
+
+    const progressRatio = milestoneAnimation.progress / milestoneAnimation.duration;
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+
+    // Animation phases based on progressRatio
+    let scale, alpha;
+    if (progressRatio < 0.2) { // Zoom in
+        scale = 0.5 + (progressRatio / 0.2) * 0.7; // 0.5 -> 1.2
+        alpha = progressRatio / 0.2; // 0 -> 1
+    } else if (progressRatio < 0.35) { // Settle
+        scale = 1.2 - ((progressRatio - 0.2) / 0.15) * 0.2; // 1.2 -> 1.0
+        alpha = 1;
+    } else if (progressRatio < 0.85) { // Hold
+        scale = 1.0;
+        alpha = 1;
+    } else { // Fade out
+        scale = 1.0 - ((progressRatio - 0.85) / 0.15) * 0.1; // 1.0 -> 0.9
+        alpha = 1 - (progressRatio - 0.85) / 0.15; // 1 -> 0
+    }
+
+    ctx.save();
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${12 * scale}vw Arial`; // Responsive font size
+    ctx.globalAlpha = alpha;
+
+    const drawTextWithShadow = (color) => {
+        ctx.shadowColor = "black";
+        ctx.shadowBlur = 8;
+        ctx.shadowOffsetX = 6;
+        ctx.shadowOffsetY = 6;
+        ctx.fillStyle = color;
+        ctx.fillText(milestoneAnimation.text, centerX, centerY);
+    };
+
+    if (milestoneAnimation.color === 'rainbow') {
+        const colors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3'];
+        ctx.font = `bold ${12 * scale}vw Arial`; // Ensure font is set before loop
+        colors.forEach((color, index) => {
+            ctx.fillStyle = color;
+            // No shadow for rainbow to keep it clean
+            ctx.shadowColor = "transparent";
+            ctx.fillText(milestoneAnimation.text, centerX + index * 2, centerY + index * 2);
+        });
+    } else {
+        drawTextWithShadow(milestoneAnimation.color);
+    }
+
+    ctx.restore();
+}
+
+
 function draw() {
     ctx.fillStyle = backgroundColors[backgroundColorIndex];
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#333';
     ctx.fillRect(0, groundY, canvas.width, 20);
+    drawMilestoneAnimation(); // Draw behind player
+    drawConfetti();
     drawPlayer();
     drawObstacles();
     drawUI();
+}
+
+// --- CONFETTI FUNCTIONS ---
+function createConfetti() {
+    confettiParticles = []; // Clear previous confetti
+    for (let i = 0; i < maxConfetti; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 8 + 4;
+
+        confettiParticles.push({
+            x: canvas.width / 2, // Start from center
+            y: canvas.height / 2,
+            size: Math.random() * 8 + 3,
+            color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            velocityY: Math.sin(angle) * speed * 0.5,
+            velocityX: Math.cos(angle) * speed,
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: Math.random() * 0.2 - 0.1,
+            time: 0,
+            gravity: gravity * 0.6 // Slightly less than player gravity
+        });
+    }
+
+    // Add extra particles for the cracker effect (from the sides)
+    const sideParticles = 50;
+    for (let i = 0; i < sideParticles; i++) {
+        const isLeft = Math.random() < 0.5;
+        confettiParticles.push({
+            x: isLeft ? 0 : canvas.width,
+            y: groundY - 50,
+            size: Math.random() * 8 + 3,
+            color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
+            velocityY: Math.random() * -12 - 5, // Shoot upwards
+            velocityX: isLeft ? Math.random() * 8 : Math.random() * -8, // Shoot inwards
+            rotation: Math.random() * Math.PI * 2,
+            rotationSpeed: Math.random() * 0.2 - 0.1,
+            time: 0,
+            gravity: gravity * 0.6
+        });
+    }
+}
+
+function updateConfetti() {
+    for (let i = confettiParticles.length - 1; i >= 0; i--) {
+        const p = confettiParticles[i];
+        p.velocityY += p.gravity;
+        p.x += p.velocityX;
+        p.y += p.velocityY;
+        p.rotation += p.rotationSpeed;
+        p.time++;
+
+        // Confetti gradually falls to the ground
+        if (p.y > groundY + 10) {
+            // Stop movement but keep it on screen for a while
+            p.y = groundY + 10;
+            p.velocityY = 0;
+            p.velocityX = 0;
+            p.rotationSpeed = 0;
+        }
+
+        // Gradually remove confetti after it lands
+        if (p.y >= groundY + 10 && p.time > 180) { // 3 seconds after landing
+             confettiParticles.splice(i, 1);
+        }
+    }
+}
+
+function drawConfetti() {
+    confettiParticles.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = p.color;
+        // Draw a small rectangle (the confetti shape)
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+        ctx.restore();
+    });
 }
 
 // --- UPDATE FUNCTIONS ---
@@ -374,6 +523,15 @@ function updateObstacleAnimations() {
             }
         }
     });
+}
+
+function updateMilestoneAnimation() {
+    if (milestoneAnimation.isActive) {
+        milestoneAnimation.progress++;
+        if (milestoneAnimation.progress >= milestoneAnimation.duration) {
+            milestoneAnimation.isActive = false;
+        }
+    }
 }
 
 // --- Obstacle Pattern Generation ---
@@ -512,17 +670,37 @@ function update() {
     updateObstacleAnimations();
     checkCollisions();
     score += 1;
+    updateMilestoneAnimation();
+    updateConfetti();
 
     // Check for 1000-point milestone
-    if (Math.floor(score) >= (lastMilestone + 1) * 1000) {
-        lastMilestone++;
-        milestoneNotification.textContent = `${lastMilestone * 1000}`;
-        milestoneNotification.classList.add('show');
+    const currentMilestone = Math.floor(score / 1000);
+    if (currentMilestone > lastMilestone) {
+        lastMilestone = currentMilestone;
+        const milestoneScore = currentMilestone * 1000;
 
-        // Remove the class after the animation finishes (2.5s)
-        setTimeout(() => {
-            milestoneNotification.classList.remove('show');
-        }, 2500);
+        milestoneAnimation.isActive = true;
+        milestoneAnimation.progress = 0;
+        milestoneAnimation.text = `${milestoneScore}`;
+
+        if (milestoneScore === 1000) {
+             milestoneAnimation.color = 'rainbow';
+             createConfetti();
+            if (specialNotification) {
+                specialNotification.textContent = 'ch登録者数3000人おめでとう！！';
+                specialNotification.classList.add('show');
+                // Remove the class after the animation ends to allow re-triggering
+                setTimeout(() => {
+                    specialNotification.classList.remove('show');
+                }, 4000); // Assuming a 4s animation
+            }
+        } else if (milestoneScore === 7000) {
+            milestoneAnimation.color = 'rainbow';
+        } else if ((currentMilestone % 2) !== 0) { // Odd thousands
+            milestoneAnimation.color = '#e53935'; // Red
+        } else { // Even thousands
+            milestoneAnimation.color = '#007aff'; // Blue
+        }
     }
 
     const currentBgLevel = Math.floor(score / 500);

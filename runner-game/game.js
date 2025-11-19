@@ -11,7 +11,7 @@ const doubleJumpStrength = -12; // A bit stronger for the second jump
 const jumpHoldStrength = 0.5;
 const maxJumpHoldFrames = 12;
 const initialGameSpeed = 4;
-const maxGameSpeed = 10;
+const maxGameSpeed = 15;
 const backgroundColors = ['#eeeeee', '#e0f7fa', '#fff9c4', '#ffcdd2', '#d1c4e9'];
 const minObstacleGap = 250; // Obstacle generation gap
 const maxObstacles = 3;     // Max obstacles on screen at once
@@ -64,7 +64,7 @@ const milestoneAnimation = {
 
 // --- Confetti State --- 👈 ここから追加
 let confettiParticles = [];
-const maxConfetti = 150;
+const maxConfetti = 250;
 const confettiColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3', '#ffffff', '#cccccc'];
 
 // --- Ground ---
@@ -411,7 +411,7 @@ function createConfetti() {
             color: confettiColors[Math.floor(Math.random() * confettiColors.length)],
             velocityY: Math.sin(angle) * speed * 0.5,
             velocityX: Math.cos(angle) * speed,
-            rotation: Math.random() * Math.PI * 2,
+            rotation: Math.random() * Math.PI * 3,
             rotationSpeed: Math.random() * 0.2 - 0.1,
             time: 0,
             gravity: gravity * 0.6 // Slightly less than player gravity
@@ -419,7 +419,7 @@ function createConfetti() {
     }
 
     // Add extra particles for the cracker effect (from the sides)
-    const sideParticles = 50;
+    const sideParticles = 100;
     for (let i = 0; i < sideParticles; i++) {
         const isLeft = Math.random() < 0.5;
         confettiParticles.push({
@@ -438,9 +438,13 @@ function createConfetti() {
 }
 
 function updateConfetti() {
+    // 落下速度の調整: 重力の影響をplayer.gravity(0.8)の約1/8 (0.1)に減らしました
+    const slowGravity = 0.1;
     for (let i = confettiParticles.length - 1; i >= 0; i--) {
         const p = confettiParticles[i];
-        p.velocityY += p.gravity;
+        
+        p.velocityY += slowGravity;
+
         p.x += p.velocityX;
         p.y += p.velocityY;
         p.rotation += p.rotationSpeed;
@@ -451,7 +455,7 @@ function updateConfetti() {
             // Stop movement but keep it on screen for a while
             p.y = groundY + 10;
             p.velocityY = 0;
-            p.velocityX = 0;
+            p.velocityX *= 0.95;
             p.rotationSpeed = 0;
         }
 

@@ -683,7 +683,7 @@ function update() {
         milestoneAnimation.progress = 0;
         milestoneAnimation.text = `${milestoneScore}`;
 
-        if (milestoneScore === 1000) {
+        if (milestoneScore === 3000) {
              milestoneAnimation.color = 'rainbow';
              createConfetti();
             if (specialNotification) {

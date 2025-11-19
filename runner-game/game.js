@@ -64,7 +64,7 @@ const milestoneAnimation = {
 
 // --- Confetti State --- 👈 ここから追加
 let confettiParticles = [];
-const maxConfetti = 250;
+const maxConfetti = 500;
 const confettiColors = ['#ff0000', '#ff7f00', '#ffff00', '#00ff00', '#0000ff', '#4b0082', '#9400d3', '#ffffff', '#cccccc'];
 
 // --- Ground ---

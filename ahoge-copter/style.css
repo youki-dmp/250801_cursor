@@ -1,0 +1,99 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  color: white;
+}
+
+#game-container {
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+  margin: 1rem 0;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  max-width: 400px;
+  height: 600px;
+  background: #87CEEB;
+}
+
+.controls {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.button-container {
+  display: flex;
+  gap: 15px;
+  margin-top: 1rem;
+  width: 90%;
+  max-width: 400px;
+  justify-content: center;
+}
+
+button {
+  padding: 15px 25px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.1s ease-in-out;
+  flex: 1;
+  max-width: 120px;
+}
+
+#leftButton,
+#rightButton {
+  background-color: #2196F3;
+  box-shadow: 0 4px #1976D2;
+}
+
+#copterButton {
+  background-color: #FF9800;
+  box-shadow: 0 4px #F57C00;
+  max-width: 150px;
+}
+
+button:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 #1976D2;
+}
+
+#copterButton:active {
+  box-shadow: 0 0 #F57C00;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  canvas {
+    max-width: 100vw;
+    height: 70vh;
+  }
+
+  .controls {
+    display: none;
+  }
+
+  button {
+    padding: 18px;
+    font-size: 1.3rem;
+  }
+}

@@ -9,9 +9,11 @@
 - 美しい電卓アプリケーション
 - ToDoリストアプリケーション
 - **NEW!** AIと開発した2Dランナーゲーム
+- **NEW!** アホ毛コプター - 縦スクロールアクションゲーム
 
 ## 公開ページ
 - **ランナーゲーム:** [こちらでプレイできます](https://youki-dmp.github.io/250801_cursor/runner-game/)
+- **アホ毛コプター:** [こちらでプレイできます](https://youki-dmp.github.io/250801_cursor/ahoge-copter/)
 - **AI画像ギャラリー:** [https://youki-dmp.github.io/250801_cursor/image-gallery/index.html](https://youki-dmp.github.io/250801_cursor/image-gallery/index.html)
 - **電卓アプリ:** [https://youki-dmp.github.io/250801_cursor/index.html](https://youki-dmp.github.io/250801_cursor/index.html)
 - **ToDoアプリ:** [https://youki-dmp.github.io/250801_cursor/todo-docs/index.html](https://youki-dmp.github.io/250801_cursor/todo-docs/index.html)
@@ -27,6 +29,10 @@ cursor_git/
 ├── mcp-config.json                # MCP設定ファイル
 ├── runner-game/                   # ランナーゲーム（開発用）
 │   ├── ...
+├── ahoge-copter/                  # アホ毛コプター（開発用）
+│   ├── ...
+├── common_se/                     # 共通サウンドエフェクト
+│   ├── ...
 ├── calculator-app/                # 電卓アプリケーション（開発用）
 │   ├── ...
 ├── todo-list-app/                 # ToDoリストアプリケーション（開発用）
@@ -36,6 +42,12 @@ cursor_git/
     │   ├── index.html
     │   ├── style.css
     │   └── game.js
+    ├── ahoge-copter/              # アホ毛コプター
+    │   ├── index.html
+    │   ├── style.css
+    │   └── game.js
+    ├── common_se/                 # 共通サウンドエフェクト
+    │   ├── ...
     ├── image-gallery/             # AI画像ギャラリー
     │   ├── ...
     ├── index.html                 # 電卓アプリのHTML

@@ -49,24 +49,46 @@ canvas {
     display: block;
 }
 
-#jumpButton {
+.button-container {
+    display: flex;
+    gap: 20px;
     margin-top: 1rem;
+    width: 90%;
+    max-width: 800px;
+    justify-content: center;
+}
+
+#jumpButton, #slideButton {
     padding: 15px 30px;
     font-size: 1.2rem;
     font-weight: bold;
     color: white;
-    background-color: #007aff;
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    box-shadow: 0 4px #0056b3; /* 影で立体感を出す */
     transition: all 0.1s ease-in-out;
+    flex: 1; /* Equal width */
+    max-width: 200px;
+}
+
+#jumpButton {
+    background-color: #007aff;
+    box-shadow: 0 4px #0056b3;
+}
+
+#slideButton {
+    background-color: #ff9800; /* Orange */
+    box-shadow: 0 4px #e65100;
 }
 
 #jumpButton:active {
-    /* ボタンを押した時に少し沈むように見せる */
     transform: translateY(4px);
     box-shadow: 0 0 #0056b3;
+}
+
+#slideButton:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 #e65100;
 }
 
 .controls {
@@ -92,8 +114,7 @@ canvas {
         display: none;
     }
 
-    #jumpButton {
-        width: 80%;
+    #jumpButton, #slideButton {
         padding: 20px;
         font-size: 1.5rem;
     }

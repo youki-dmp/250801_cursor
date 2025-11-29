@@ -286,16 +286,25 @@ function updateEnemies() {
     enemy.y += enemy.vy;
     enemy.animFrame++;
 
-    if (enemy.type === 'bird') {
+    // Wrap gyozas around screen
+    if (enemy.type === 'gyoza') {
       if (enemy.x < -50) enemy.x = canvas.width + 50;
       if (enemy.x > canvas.width + 50) enemy.x = -50;
     }
 
-    const playerCenterX = player.x;
-    const playerCenterY = player.y - player.height / 2;
+    // Check collision with player (AABB)
+    const playerLeft = player.x - player.width / 2;
+    const playerRight = player.x + player.width / 2;
+    const playerTop = player.y - player.height;
+    const playerBottom = player.y;
 
-    if (playerCenterX > enemy.x - enemy.width / 2 && playerCenterX < enemy.x + enemy.width / 2 &&
-      playerCenterY > enemy.y - enemy.height / 2 && playerCenterY < enemy.y + enemy.height / 2) {
+    const enemyLeft = enemy.x - enemy.width / 2;
+    const enemyRight = enemy.x + enemy.width / 2;
+    const enemyTop = enemy.y - enemy.height / 2;
+    const enemyBottom = enemy.y + enemy.height / 2;
+
+    if (playerLeft < enemyRight && playerRight > enemyLeft &&
+      playerTop < enemyBottom && playerBottom > enemyTop) {
       gameOver = true;
       sounds.gameOver.currentTime = 0;
       sounds.gameOver.play().catch(() => { });
@@ -303,7 +312,8 @@ function updateEnemies() {
       sounds.copter.currentTime = 0;
     }
 
-    if (enemy.y > cameraY + canvas.height + 200 || enemy.y < cameraY - 200) {
+    // Remove enemies that are too far below (fallen off screen) or way too far above (sanity check)
+    if (enemy.y > cameraY + canvas.height + 200 || enemy.y < cameraY - canvas.height * 2) {
       enemies.splice(i, 1);
     }
   }
@@ -312,27 +322,40 @@ function updateEnemies() {
 function drawEnemies() {
   enemies.forEach(enemy => {
     ctx.save();
-    if (enemy.type === 'bird') {
-      const wingFlap = Math.sin(enemy.animFrame * 0.2) * 5;
-      ctx.fillStyle = '#8B4513';
+    if (enemy.type === 'gyoza') {
+      const wobble = Math.sin(enemy.animFrame * 0.2) * 3;
+
+      ctx.translate(enemy.x, enemy.y + wobble);
+      // Flip if moving left
+      if (enemy.vx < 0) ctx.scale(-1, 1);
+
+      // Gyoza body (semi-circleish)
+      ctx.fillStyle = '#F4E4BC'; // Dough color
       ctx.beginPath();
-      ctx.ellipse(enemy.x, enemy.y, enemy.width / 2, enemy.height / 2, 0, 0, Math.PI * 2);
+      ctx.arc(0, 0, 20, Math.PI, 0); // Top half
+      ctx.lineTo(20, 10);
+      ctx.quadraticCurveTo(0, 15, -20, 10);
+      ctx.closePath();
       ctx.fill();
-      ctx.fillStyle = '#654321';
+
+      // Grilled bottom
+      ctx.fillStyle = '#D2691E'; // Brown
       ctx.beginPath();
-      ctx.ellipse(enemy.x - 10, enemy.y + wingFlap, 8, 12, -0.3, 0, Math.PI * 2);
+      ctx.moveTo(-15, 8);
+      ctx.quadraticCurveTo(0, 12, 15, 8);
+      ctx.lineTo(12, 2);
+      ctx.quadraticCurveTo(0, 6, -12, 2);
       ctx.fill();
-      ctx.beginPath();
-      ctx.ellipse(enemy.x + 10, enemy.y - wingFlap, 8, 12, 0.3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'white';
-      ctx.beginPath();
-      ctx.arc(enemy.x + 5, enemy.y - 3, 3, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = 'black';
-      ctx.beginPath();
-      ctx.arc(enemy.x + 6, enemy.y - 3, 1.5, 0, Math.PI * 2);
-      ctx.fill();
+
+      // Pleats
+      ctx.strokeStyle = '#E6CFA0';
+      ctx.lineWidth = 2;
+      for (let i = -3; i <= 3; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * 5, -18);
+        ctx.lineTo(i * 4, -10);
+        ctx.stroke();
+      }
     } else if (enemy.type === 'balloon') {
       const bounce = Math.sin(enemy.animFrame * 0.1) * 2;
       ctx.fillStyle = '#FF6B6B';
@@ -439,19 +462,35 @@ function generateNewPlatforms() {
     }
 
     // Spawn enemy
-    if (score > 100 && Math.random() < 0.15) {
-      const enemyType = Math.random() < 0.6 ? 'bird' : 'balloon';
-      const enemyX = Math.random() * canvas.width;
+    if (score > 10 && Math.random() < 0.3) {
+      const enemyType = Math.random() < 0.7 ? 'gyoza' : 'balloon';
       const enemyY = highest - 50 - Math.random() * 100;
+
+      let vx = 0;
+      let vy = 0;
+      let enemyX = Math.random() * canvas.width;
+
+      if (enemyType === 'gyoza') {
+        // 50% chance to spawn from side
+        if (Math.random() < 0.5) {
+          const fromLeft = Math.random() < 0.5;
+          enemyX = fromLeft ? -40 : canvas.width + 40;
+          vx = fromLeft ? (2 + Math.random()) : -(2 + Math.random());
+        } else {
+          vx = Math.random() < 0.5 ? 2 : -2;
+        }
+      } else if (enemyType === 'balloon') {
+        vy = -0.5;
+      }
 
       enemies.push({
         x: enemyX,
         y: enemyY,
         type: enemyType,
-        width: enemyType === 'bird' ? 30 : 25,
-        height: enemyType === 'bird' ? 20 : 35,
-        vx: enemyType === 'bird' ? (Math.random() < 0.5 ? 2 : -2) : 0,
-        vy: enemyType === 'balloon' ? -0.5 : 0,
+        width: enemyType === 'gyoza' ? 40 : 25,
+        height: enemyType === 'gyoza' ? 25 : 35,
+        vx: vx,
+        vy: vy,
         animFrame: 0
       });
     }

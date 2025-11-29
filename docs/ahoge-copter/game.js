@@ -14,10 +14,19 @@ const config = {
   springJumpSpeed: -18,
   moveSpeed: 5,
   copterGravity: 0.12,
-  platformSpacing: 80,
+  basePlatformSpacing: 80,
   platformWidth: 70,
   platformHeight: 15
 };
+
+// --- DIFFICULTY SCALING ---
+const difficultyThresholds = [
+  { score: 0, spacingMultiplier: 1.0, fragileRate: 0.15, movingSpeed: 2 },
+  { score: 200, spacingMultiplier: 1.2, fragileRate: 0.25, movingSpeed: 2.5 },
+  { score: 500, spacingMultiplier: 1.4, fragileRate: 0.35, movingSpeed: 3 },
+  { score: 1000, spacingMultiplier: 1.6, fragileRate: 0.45, movingSpeed: 3.5 },
+  { score: 2000, spacingMultiplier: 1.8, fragileRate: 0.55, movingSpeed: 4 }
+];
 
 // --- GAME STATE ---
 let gameOver = false;
@@ -25,6 +34,22 @@ let score = 0;
 let highScore = 0;
 let cameraY = 0;
 let animationFrameId = null; // Track animation frame
+
+// --- COMBO SYSTEM ---
+let comboCount = 0;
+let comboMultiplier = 1.0;
+let lastLandingTime = 0;
+const comboTimeout = 2000; // 2 seconds to maintain combo
+let comboParticles = [];
+
+// --- COIN SYSTEM ---
+let coins = [];
+let coinScore = 0;
+let coinParticles = [];
+
+// --- ENEMY SYSTEM ---
+let enemies = [];
+let lastPlatformId = null; // Track last platform for combo
 
 // --- PLAYER ---
 const player = {
@@ -274,7 +299,8 @@ function generateInitialPlatforms() {
       type: type,
       broken: false,
       moveDir: Math.random() < 0.5 ? 1 : -1,
-      moveSpeed: 2
+      moveSpeed: 2,
+      id: Date.now() + Math.random() // Unique ID for combo tracking
     });
 
     currentY -= config.platformSpacing + Math.random() * 40 - 20;
@@ -282,10 +308,17 @@ function generateInitialPlatforms() {
 }
 
 function getRandomPlatformType() {
+  const difficulty = getCurrentDifficulty();
   const rand = Math.random();
-  if (rand < 0.6) return PlatformType.NORMAL;
-  if (rand < 0.75) return PlatformType.FRAGILE;
-  if (rand < 0.9) return PlatformType.MOVING;
+
+  // Adjust spawn rates based on difficulty
+  const normalRate = 0.6 - (difficulty.fragileRate - 0.15);
+  const fragileRate = normalRate + difficulty.fragileRate;
+  const movingRate = fragileRate + 0.15;
+
+  if (rand < normalRate) return PlatformType.NORMAL;
+  if (rand < fragileRate) return PlatformType.FRAGILE;
+  if (rand < movingRate) return PlatformType.MOVING;
   return PlatformType.SPRING;
 }
 
@@ -293,11 +326,14 @@ function generateNewPlatforms() {
   // Find highest platform
   let highest = Math.min(...platforms.map(p => p.y));
 
+  const difficulty = getCurrentDifficulty();
+  const platformSpacing = config.basePlatformSpacing * difficulty.spacingMultiplier;
+
   // Generate new platforms above
   while (highest > cameraY - canvas.height) {
     const type = getRandomPlatformType();
     const x = Math.random() * (canvas.width - config.platformWidth);
-    highest -= config.platformSpacing + Math.random() * 40 - 20;
+    highest -= platformSpacing + Math.random() * 40 - 20;
 
     platforms.push({
       x: x,
@@ -307,8 +343,40 @@ function generateNewPlatforms() {
       type: type,
       broken: false,
       moveDir: Math.random() < 0.5 ? 1 : -1,
-      moveSpeed: 2
+      moveSpeed: difficulty.movingSpeed,
+      id: Date.now() + Math.random() // Unique ID for combo tracking
     });
+
+    // Sometimes spawn coins near platforms
+    if (Math.random() < 0.3) {
+      const coinX = x + Math.random() * config.platformWidth;
+      const coinY = highest - 30 - Math.random() * 40;
+      coins.push({
+        x: coinX,
+        y: coinY,
+        size: 12,
+        collected: false,
+        rotation: Math.random() * Math.PI * 2
+      });
+    }
+
+    // Spawn enemies at higher scores
+    if (score > 100 && Math.random() < 0.15) {
+      const enemyType = Math.random() < 0.6 ? 'bird' : 'balloon';
+      const enemyX = Math.random() * canvas.width;
+      const enemyY = highest - 50 - Math.random() * 100;
+
+      enemies.push({
+        x: enemyX,
+        y: enemyY,
+        type: enemyType,
+        width: enemyType === 'bird' ? 30 : 25,
+        height: enemyType === 'bird' ? 20 : 35,
+        vx: enemyType === 'bird' ? (Math.random() < 0.5 ? 2 : -2) : 0,
+        vy: enemyType === 'balloon' ? -0.5 : 0,
+        animFrame: 0
+      });
+    }
   }
 
   // Remove platforms below screen
@@ -333,6 +401,12 @@ function update() {
   // Copter mode
   const wasCoptering = player.isCoptering;
   player.isCoptering = keys.copter && player.velocityY > 0;
+
+  // Reset combo when using copter
+  if (player.isCoptering && !wasCoptering && comboCount > 0) {
+    comboCount = 0;
+    updateComboMultiplier();
+  }
 
   // Handle copter sound
   if (player.isCoptering && !wasCoptering) {
@@ -371,12 +445,22 @@ function update() {
   // Update score (height)
   const currentScore = Math.max(0, Math.floor((canvas.height - player.y) / 10));
   if (currentScore > score) {
-    score = currentScore;
+    const scoreDiff = currentScore - score;
+    score += Math.floor(scoreDiff * comboMultiplier); // Apply combo multiplier
     if (score > highScore) {
       highScore = score;
       localStorage.setItem('ahogeCopterHighScore', highScore);
     }
   }
+
+  // Check combo timeout
+  if (comboCount > 0 && Date.now() - lastLandingTime > comboTimeout) {
+    comboCount = 0;
+    updateComboMultiplier();
+  }
+
+  // Update combo particles
+  updateComboParticles();
 
   // Update moving platforms
   platforms.forEach(p => {
@@ -396,6 +480,12 @@ function update() {
 
   // Generate new platforms
   generateNewPlatforms();
+
+  // Update coins
+  updateCoins();
+
+  // Update enemies
+  updateEnemies();
 
   // Game over if player falls below screen
   if (player.y - cameraY > canvas.height) {
@@ -424,6 +514,20 @@ function checkCollisions() {
         // Land on platform
         player.y = platform.y;  // Set feet directly on platform top
         player.isOnPlatform = true;
+
+        // Increase combo only if it's a different platform
+        if (lastPlatformId !== platform.id) {
+          comboCount++;
+          lastLandingTime = Date.now();
+          updateComboMultiplier();
+          lastPlatformId = platform.id;
+
+          // Combo particle effect
+          if (comboCount % 5 === 0) {
+            createComboParticle(player.x, player.y - 30);
+            playSound(sounds.jump); // Extra sound for combo milestone
+          }
+        }
 
         // Jump based on platform type
         if (platform.type === PlatformType.SPRING) {
@@ -499,6 +603,239 @@ function draw() {
       }
     });
   });
+}
+
+// --- COMBO SYSTEM FUNCTIONS ---
+function updateComboMultiplier() {
+  if (comboCount >= 20) {
+    comboMultiplier = 3.0;
+  } else if (comboCount >= 10) {
+    comboMultiplier = 2.0;
+  } else if (comboCount >= 5) {
+    comboMultiplier = 1.5;
+  } else {
+    comboMultiplier = 1.0;
+  }
+}
+
+function createComboParticle(x, y) {
+  for (let i = 0; i < 10; i++) {
+    comboParticles.push({
+      x: x + (Math.random() - 0.5) * 30,
+      y: y,
+      vx: (Math.random() - 0.5) * 3,
+      vy: -Math.random() * 3 - 2,
+      life: 1.0,
+      decay: 0.02,
+      size: Math.random() * 4 + 2,
+      color: `hsl(${60 + Math.random() * 60}, 100%, 50%)` // Yellow-orange
+    });
+  }
+}
+
+function updateComboParticles() {
+  for (let i = comboParticles.length - 1; i >= 0; i--) {
+    const p = comboParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.1; // Gravity
+    p.life -= p.decay;
+
+    if (p.life <= 0) {
+      comboParticles.splice(i, 1);
+    }
+  }
+}
+
+function drawComboParticles() {
+  comboParticles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// --- DIFFICULTY SCALING FUNCTIONS ---
+function getCurrentDifficulty() {
+  // Find appropriate difficulty threshold
+  for (let i = difficultyThresholds.length - 1; i >= 0; i--) {
+    if (score >= difficultyThresholds[i].score) {
+      return difficultyThresholds[i];
+    }
+  }
+  return difficultyThresholds[0];
+}
+
+// --- COIN SYSTEM FUNCTIONS ---
+function updateCoins() {
+  for (let i = coins.length - 1; i >= 0; i--) {
+    const coin = coins[i];
+
+    // Rotate coin for animation
+    coin.rotation += 0.1;
+
+    // Check collision with player
+    const dx = player.x - coin.x;
+    const dy = (player.y - player.height / 2) - coin.y;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if (distance < player.width / 2 + coin.size && !coin.collected) {
+      // Collect coin
+      coin.collected = true;
+      coinScore++;
+      const bonusScore = Math.floor(100 * comboMultiplier);
+      score += bonusScore;
+
+      // Sparkle effect
+      createCoinParticles(coin.x, coin.y);
+
+      // Play sound (reuse jump sound for now)
+      playSound(sounds.jump);
+
+      coins.splice(i, 1);
+      continue;
+    }
+
+    // Remove coins that are too far below
+    if (coin.y > cameraY + canvas.height + 200) {
+      coins.splice(i, 1);
+    }
+  }
+
+  // Update coin particles
+  updateCoinParticles();
+}
+
+function createCoinParticles(x, y) {
+  for (let i = 0; i < 15; i++) {
+    coinParticles.push({
+      x: x,
+      y: y,
+      vx: (Math.random() - 0.5) * 4,
+      vy: (Math.random() - 0.5) * 4,
+      life: 1.0,
+      decay: 0.025,
+      size: Math.random() * 3 + 2,
+      color: `hsl(${45 + Math.random() * 15}, 100%, 50%)` // Gold
+    });
+  }
+}
+
+function updateCoinParticles() {
+  for (let i = coinParticles.length - 1; i >= 0; i--) {
+    const p = coinParticles[i];
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life -= p.decay;
+
+    if (p.life <= 0) {
+      coinParticles.splice(i, 1);
+    }
+  }
+}
+
+function drawCoins() {
+  coins.forEach(coin => {
+    if (coin.collected) return;
+
+    ctx.save();
+    ctx.translate(coin.x, coin.y);
+    ctx.rotate(coin.rotation);
+
+    // Gold coin
+    ctx.fillStyle = '#FFD700';
+    ctx.beginPath();
+    ctx.arc(0, 0, coin.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#DAA520';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Inner detail
+    ctx.fillStyle = '#FFA500';
+    ctx.beginPath();
+    ctx.arc(0, 0, coin.size * 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.restore();
+  });
+}
+
+function drawCoinParticles() {
+  coinParticles.forEach(p => {
+    ctx.save();
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  });
+}
+
+// --- DRAW ---
+function draw() {
+  // Sky gradient based on height
+  const skyColors = getSkyColor();
+  const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  gradient.addColorStop(0, skyColors.top);
+  gradient.addColorStop(1, skyColors.bottom);
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw stars if in space
+  if (score >= 500) {
+    ctx.fillStyle = 'white';
+    for (let i = 0; i < 30; i++) {
+      const x = (i * 137.5) % canvas.width;
+      const y = (i * 234.7 + cameraY * 0.05) % canvas.height;
+      const size = (i % 3) + 1;
+      ctx.fillRect(x, y, size, size);
+    }
+  }
+
+  // Save context for camera
+  ctx.save();
+  ctx.translate(0, -cameraY);
+
+  // Draw background objects
+  backgroundLayers.forEach(layer => {
+    // Mountains only show below score 100
+    if (layer.type === 'mountain' && score >= 100) return;
+
+    layer.objects.forEach(obj => {
+      if (layer.type === 'cloud') {
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.beginPath();
+        ctx.ellipse(obj.x, obj.y, obj.width / 2, obj.height / 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (layer.type === 'mountain') {
+        // Mt. Fuji style - dark blue-gray
+        ctx.fillStyle = '#2D3748';
+        ctx.beginPath();
+        ctx.moveTo(obj.x, obj.y);
+        ctx.lineTo(obj.x + obj.width / 2, obj.y - obj.height);
+        ctx.lineTo(obj.x + obj.width, obj.y);
+        ctx.fill();
+
+        // Snow cap (larger for Mt. Fuji)
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        ctx.moveTo(obj.x + obj.width / 2, obj.y - obj.height);
+        ctx.lineTo(obj.x + obj.width * 0.3, obj.y - obj.height * 0.6);
+        ctx.lineTo(obj.x + obj.width * 0.7, obj.y - obj.height * 0.6);
+        ctx.fill();
+      }
+    });
+  });
+
+  // Draw enemies
+  drawEnemies();
 
   // Draw platforms
   platforms.forEach(platform => {
@@ -542,10 +879,22 @@ function draw() {
   // Draw player
   drawPlayer();
 
+  // Draw coins
+  drawCoins();
+
+  // Draw combo particles
+  drawComboParticles();
+
+  // Draw coin particles
+  drawCoinParticles();
+
   ctx.restore();
 
   // Draw UI
   drawUI();
+
+  // Draw combo UI (on top)
+  drawComboUI();
 }
 
 function drawPlayer() {
@@ -616,13 +965,15 @@ function drawUI() {
   ctx.font = '24px Arial';
   ctx.textAlign = 'left';
 
-  const drawText = (text, x, y) => {
+  const drawText = (text, x, y, color = 'black') => {
     ctx.strokeText(text, x, y);
+    ctx.fillStyle = color;
     ctx.fillText(text, x, y);
   };
 
   drawText(`Score: ${score}`, 10, 30);
-  drawText(`Best: ${highScore}`, 10, 60);
+  drawText(`Coins: ${coinScore}`, 10, 60, '#FFD700');
+  drawText(`Best: ${highScore}`, 10, 90);
 
   if (gameOver) {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
@@ -641,6 +992,33 @@ function drawUI() {
     ctx.font = '20px Arial';
     drawText('Click to restart', canvas.width / 2, canvas.height / 2 + 100);
   }
+}
+
+function drawComboUI() {
+  if (comboCount < 2) return; // Only show when combo is active
+
+  ctx.save();
+  ctx.textAlign = 'center';
+
+  // Combo count
+  const pulseScale = 1 + Math.sin(Date.now() / 100) * 0.1;
+  ctx.font = `bold ${30 * pulseScale}px Arial`;
+  ctx.strokeStyle = 'black';
+  ctx.lineWidth = 4;
+  ctx.fillStyle = comboMultiplier >= 3.0 ? '#FF4500' : comboMultiplier >= 2.0 ? '#FF8C00' : '#FFD700';
+
+  const comboText = `${comboCount} COMBO!`;
+  ctx.strokeText(comboText, canvas.width / 2, 120);
+  ctx.fillText(comboText, canvas.width / 2, 120);
+
+  // Multiplier
+  ctx.font = '20px Arial';
+  ctx.fillStyle = 'white';
+  const multText = `×${comboMultiplier.toFixed(1)}`;
+  ctx.strokeText(multText, canvas.width / 2, 150);
+  ctx.fillText(multText, canvas.width / 2, 150);
+
+  ctx.restore();
 }
 
 // --- GAME LOOP ---
@@ -663,6 +1041,17 @@ function resetGame() {
   player.isCoptering = false;
   player.ahogeAngle = 0;
   player.shakeX = 0;
+
+  // Reset combo
+  comboCount = 0;
+  comboMultiplier = 1.0;
+  lastLandingTime = 0;
+  comboParticles = [];
+
+  // Reset coins
+  coins = [];
+  coinScore = 0;
+  coinParticles = [];
 
   // Stop copter sound if playing
   stopSound(sounds.copter);

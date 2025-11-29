@@ -17,11 +17,11 @@ const copterButton = document.getElementById('copterButton');
 
 // Sound effects
 const sounds = {
-  jump: new Audio('../common_se/maou_se_magic_wind02.wav'),
-  spring: new Audio('../common_se/maou_se_magical08.wav'),
-  break: new Audio('../common_se/maou_se_magical22.wav'),
-  gameOver: new Audio('../common_se/maou_se_magic_water02.wav'),
-  copter: new Audio('../common_se/maou_se_magical30.wav')
+  jump: new Audio('./common_se/maou_se_magic_wind02.wav'),
+  spring: new Audio('./common_se/maou_se_magical08.wav'),
+  break: new Audio('./common_se/maou_se_magical22.wav'),
+  gameOver: new Audio('./common_se/maou_se_magic_water02.wav'),
+  copter: new Audio('./common_se/maou_se_magical30.wav')
 };
 
 sounds.break.playbackRate = 2.0;

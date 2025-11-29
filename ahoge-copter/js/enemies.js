@@ -15,7 +15,7 @@ export class EnemySystem {
       enemy.animFrame++;
 
       // Wrap birds around screen
-      if (enemy.type === 'bird') {
+      if (enemy.type === 'gyoza') {
         if (enemy.x < -50) enemy.x = this.canvas.width + 50;
         if (enemy.x > this.canvas.width + 50) enemy.x = -50;
       }

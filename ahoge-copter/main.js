@@ -64,7 +64,8 @@ const player = {
   ahogeSpeed: 0,
   animationFrame: 0,
   frameCounter: 0,
-  shakeX: 0
+  shakeX: 0,
+  barrier: false
 };
 
 // Controls
@@ -239,8 +240,8 @@ function update() {
   player.y += player.velocityY;
 
   // Camera
-  if (player.y < cameraY + canvas.height * 0.4) {
-    cameraY = player.y - canvas.height * 0.4;
+  if (player.y < cameraY + canvas.height * 0.7) {
+    cameraY = player.y - canvas.height * 0.7;
   }
 
   // Score
@@ -258,21 +259,33 @@ function update() {
   platformSystem.update(score);
   comboSystem.update();
 
-  const coinBonus = coinSystem.update(player, score, comboSystem.multiplier, cameraY);
-  if (coinBonus > 0) score += coinBonus;
+  const coinResult = coinSystem.update(player, score, comboSystem.multiplier, cameraY);
+  if (coinResult.bonusScore > 0) score += coinResult.bonusScore;
+  if (coinResult.barrierEarned && !player.barrier) {
+    player.barrier = true;
+    sounds.spring.currentTime = 0;
+    sounds.spring.play().catch(() => { });
+  }
 
   enemySystem.update(score, cameraY, player, { gameOver: () => gameOver = true });
   updateBackground();
   platformSystem.generateNew(cameraY, score, coinSystem, enemySystem);
   platformSystem.checkCollision(player, comboSystem);
 
-  // Game over
+  // Game over or Barrier save
   if (player.y - cameraY > canvas.height) {
-    gameOver = true;
-    sounds.gameOver.currentTime = 0;
-    sounds.gameOver.play().catch(() => { });
-    sounds.copter.pause();
-    sounds.copter.currentTime = 0;
+    if (player.barrier) {
+      player.barrier = false;
+      player.velocityY = -20; // Super jump save
+      sounds.break.currentTime = 0;
+      sounds.break.play().catch(() => { });
+    } else {
+      gameOver = true;
+      sounds.gameOver.currentTime = 0;
+      sounds.gameOver.play().catch(() => { });
+      sounds.copter.pause();
+      sounds.copter.currentTime = 0;
+    }
   }
 }
 
@@ -391,6 +404,18 @@ function drawPlayer() {
       ctx.stroke();
       ctx.restore();
     }
+  }
+
+  if (player.barrier) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(player.x + player.shakeX, drawY + player.height / 2, player.width, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
   }
 
   ctx.restore();

@@ -29,7 +29,9 @@ export class CoinSystem {
         this.sounds.jump.play().catch(() => { });
 
         this.coins.splice(i, 1);
-        return bonusScore;
+
+        const barrierEarned = [5, 15, 30].includes(this.coinScore);
+        return { bonusScore, barrierEarned };
       }
 
       if (coin.y > cameraY + this.canvas.height + 200) {
@@ -49,7 +51,7 @@ export class CoinSystem {
       }
     }
 
-    return 0;
+    return { bonusScore: 0, barrierEarned: false };
   }
 
   spawn(x, y) {

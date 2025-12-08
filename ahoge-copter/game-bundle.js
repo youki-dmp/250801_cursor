@@ -87,7 +87,8 @@ const player = {
   ahogeSpeed: 0,
   animationFrame: 0,
   frameCounter: 0,
-  shakeX: 0
+  shakeX: 0,
+  barrier: false
 };
 
 // Controls
@@ -198,6 +199,12 @@ function updateCoins() {
       const bonusScore = Math.floor(100 * comboMultiplier);
       score += bonusScore;
 
+      if ([5, 15, 30].includes(coinScore) && !player.barrier) {
+        player.barrier = true;
+        sounds.spring.currentTime = 0;
+        sounds.spring.play().catch(() => { });
+      }
+
       createCoinParticles(coin.x, coin.y);
       sounds.jump.currentTime = 0;
       sounds.jump.play().catch(() => { });
@@ -305,11 +312,20 @@ function updateEnemies() {
 
     if (playerLeft < enemyRight && playerRight > enemyLeft &&
       playerTop < enemyBottom && playerBottom > enemyTop) {
-      gameOver = true;
-      sounds.gameOver.currentTime = 0;
-      sounds.gameOver.play().catch(() => { });
-      sounds.copter.pause();
-      sounds.copter.currentTime = 0;
+
+      if (player.barrier) {
+        player.barrier = false;
+        sounds.break.currentTime = 0;
+        sounds.break.play().catch(() => { });
+        enemies.splice(i, 1);
+        continue;
+      } else {
+        gameOver = true;
+        sounds.gameOver.currentTime = 0;
+        sounds.gameOver.play().catch(() => { });
+        sounds.copter.pause();
+        sounds.copter.currentTime = 0;
+      }
     }
 
     // Remove enemies that are too far below (fallen off screen) or way too far above (sanity check)
@@ -696,6 +712,18 @@ function drawPlayer() {
     }
   }
 
+  if (player.barrier) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
+    ctx.lineWidth = 3;
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+    ctx.beginPath();
+    ctx.arc(player.x + player.shakeX, drawY + player.height / 2, player.width, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
   ctx.restore();
   ctx.restore();
 }
@@ -892,8 +920,8 @@ function update() {
   player.y += player.velocityY;
 
   // Camera
-  if (player.y < cameraY + canvas.height * 0.4) {
-    cameraY = player.y - canvas.height * 0.4;
+  if (player.y < cameraY + canvas.height * 0.7) {
+    cameraY = player.y - canvas.height * 0.7;
   }
 
   // Score
@@ -922,13 +950,20 @@ function update() {
   generateNewPlatforms();
   checkPlatformCollision();
 
-  // Game over
+  // Game over or Barrier save
   if (player.y - cameraY > canvas.height) {
-    gameOver = true;
-    sounds.gameOver.currentTime = 0;
-    sounds.gameOver.play().catch(() => { });
-    sounds.copter.pause();
-    sounds.copter.currentTime = 0;
+    if (player.barrier) {
+      player.barrier = false;
+      player.velocityY = -20; // Super jump save
+      sounds.break.currentTime = 0;
+      sounds.break.play().catch(() => { });
+    } else {
+      gameOver = true;
+      sounds.gameOver.currentTime = 0;
+      sounds.gameOver.play().catch(() => { });
+      sounds.copter.pause();
+      sounds.copter.currentTime = 0;
+    }
   }
 }
 
@@ -988,6 +1023,7 @@ function resetGame() {
   player.isCoptering = false;
   player.ahogeAngle = 0;
   player.shakeX = 0;
+  player.barrier = false;
 
   comboCount = 0;
   comboMultiplier = 1.0;

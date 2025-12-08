@@ -33,11 +33,20 @@ export class EnemySystem {
 
       if (playerLeft < enemyRight && playerRight > enemyLeft &&
         playerTop < enemyBottom && playerBottom > enemyTop) {
-        gameState.gameOver = true;
-        this.sounds.gameOver.currentTime = 0;
-        this.sounds.gameOver.play().catch(() => { });
-        this.sounds.copter.pause();
-        this.sounds.copter.currentTime = 0;
+
+        if (player.barrier) {
+          player.barrier = false;
+          this.sounds.break.currentTime = 0;
+          this.sounds.break.play().catch(() => { });
+          this.enemies.splice(i, 1);
+          continue; // Skip rest of loop for this enemy since it's removed
+        } else {
+          gameState.gameOver = true;
+          this.sounds.gameOver.currentTime = 0;
+          this.sounds.gameOver.play().catch(() => { });
+          this.sounds.copter.pause();
+          this.sounds.copter.currentTime = 0;
+        }
       }
 
       // Remove enemies that are too far below or way too far above

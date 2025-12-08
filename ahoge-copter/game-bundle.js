@@ -29,6 +29,35 @@ const PlatformType = {
 
 const comboTimeout = 2000;
 
+// Audio Context for special effects
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+async function playReverseSound(url) {
+  try {
+    const response = await fetch(url);
+    const arrayBuffer = await response.arrayBuffer();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+    const channels = audioBuffer.numberOfChannels;
+    const reversedBuffer = audioCtx.createBuffer(channels, audioBuffer.length, audioBuffer.sampleRate);
+
+    for (let i = 0; i < channels; i++) {
+      const input = audioBuffer.getChannelData(i);
+      const output = reversedBuffer.getChannelData(i);
+      for (let j = 0; j < input.length; j++) {
+        output[j] = input[input.length - 1 - j];
+      }
+    }
+
+    const source = audioCtx.createBufferSource();
+    source.buffer = reversedBuffer;
+    source.connect(audioCtx.destination);
+    source.start();
+  } catch (e) {
+    console.error("Error playing reverse sound:", e);
+  }
+}
+
 // === INITIALIZATION ===
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -199,10 +228,9 @@ function updateCoins() {
       const bonusScore = Math.floor(100 * comboMultiplier);
       score += bonusScore;
 
-      if ([5, 15, 30].includes(coinScore) && !player.barrier) {
+      if ([1, 5, 10, 20].includes(coinScore) && !player.barrier) {
         player.barrier = true;
-        sounds.spring.currentTime = 0;
-        sounds.spring.play().catch(() => { });
+        playReverseSound(sounds.jump.src);
       }
 
       createCoinParticles(coin.x, coin.y);
@@ -668,7 +696,8 @@ function drawPlayer() {
 
   ctx.save();
 
-  ctx.fillStyle = 'blue';
+  const mainColor = player.barrier ? 'red' : 'blue';
+  ctx.fillStyle = mainColor;
   ctx.fillRect(drawX, drawY, player.width, player.height);
 
   ctx.fillStyle = 'white';
@@ -686,7 +715,7 @@ function drawPlayer() {
   ctx.translate(player.x + player.shakeX, drawY);
   ctx.rotate(player.ahogeAngle);
 
-  ctx.strokeStyle = 'blue';
+  ctx.strokeStyle = mainColor;
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(0, 0);
@@ -713,14 +742,42 @@ function drawPlayer() {
   }
 
   if (player.barrier) {
+    const time = Date.now() / 1000;
     ctx.save();
-    ctx.strokeStyle = 'rgba(0, 255, 255, 0.6)';
-    ctx.lineWidth = 3;
-    ctx.fillStyle = 'rgba(0, 255, 255, 0.2)';
+
+    // Rotating outer ring
+    ctx.translate(player.x + player.shakeX, drawY + player.height / 2);
+    ctx.rotate(time);
+
+    ctx.strokeStyle = 'rgba(0, 255, 255, 0.8)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([10, 10]);
     ctx.beginPath();
-    ctx.arc(player.x + player.shakeX, drawY + player.height / 2, player.width, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.arc(0, 0, player.width * 1.2, 0, Math.PI * 2);
     ctx.stroke();
+
+    // Inner pulsing shield
+    ctx.setLineDash([]);
+    ctx.rotate(-time * 2);
+    const pulse = 1 + Math.sin(time * 5) * 0.1;
+    ctx.fillStyle = 'rgba(0, 255, 255, 0.3)';
+    ctx.beginPath();
+    ctx.arc(0, 0, player.width * pulse, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Sparkles
+    for (let i = 0; i < 4; i++) {
+      const angle = (time * 2) + (i * Math.PI / 2);
+      const dist = player.width * 1.2;
+      const sx = Math.cos(angle) * dist;
+      const sy = Math.sin(angle) * dist;
+
+      ctx.fillStyle = '#FFF';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
     ctx.restore();
   }
 

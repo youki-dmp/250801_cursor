@@ -30,7 +30,7 @@ export class CoinSystem {
 
         this.coins.splice(i, 1);
 
-        const barrierEarned = [5, 15, 30].includes(this.coinScore);
+        const barrierEarned = [1, 5, 10, 20].includes(this.coinScore);
         return { bonusScore, barrierEarned };
       }
 

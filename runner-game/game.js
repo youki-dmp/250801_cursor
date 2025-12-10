@@ -4,6 +4,10 @@ const ctx = canvas.getContext('2d');
 const jumpButton = document.getElementById('jumpButton');
 const specialNotification = document.getElementById('special-notification');
 
+// --- Audio Assets ---
+const jumpSound = new Audio('../common_se/maou_se_magical30.wav');
+const gameOverSound = new Audio('../common_se/maou_se_magic_fire04.wav');
+
 // --- Game Configuration ---
 const gravity = 0.8;
 const initialJumpStrength = -10;
@@ -396,6 +400,11 @@ function handleJumpStart() {
             // Jump particles
             for (let i = 0; i < 8; i++) createParticle(player.x, player.y, 'jump');
         }
+
+        // Play jump sound
+        jumpSound.currentTime = 0;
+        jumpSound.play();
+
         player.isJumping = true;
         player.jumpCount++;
     }
@@ -1152,6 +1161,11 @@ function checkCollisions() {
         // For this game, we'll check collision against the un-rotated hitbox, which is a good enough approximation.
         if (playerHitbox.x < obstacle.x + obstacle.width && playerHitbox.x + playerHitbox.width > obstacle.x && playerHitbox.y < obstacle.y + obstacle.height && playerHitbox.y + playerHitbox.height > obstacle.y) {
             gameOver = true;
+
+            // Play game over sound
+            gameOverSound.currentTime = 0;
+            gameOverSound.play();
+
             player.isJumpKeyDown = false;
 
             if (score > highScore) {

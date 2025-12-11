@@ -14,6 +14,7 @@
 ## 公開ページ
 - **ランナーゲーム:** [こちらでプレイできます](https://youki-dmp.github.io/250801_cursor/runner-game/)
 - **アホ毛コプター:** [こちらでプレイできます](https://youki-dmp.github.io/250801_cursor/ahoge-copter/)
+- **マジック・ブロック崩し:** [こちらでプレイできます](https://youki-dmp.github.io/250801_cursor/block-breaker/)
 - **AI画像ギャラリー:** [https://youki-dmp.github.io/250801_cursor/image-gallery/index.html](https://youki-dmp.github.io/250801_cursor/image-gallery/index.html)
 - **電卓アプリ:** [https://youki-dmp.github.io/250801_cursor/index.html](https://youki-dmp.github.io/250801_cursor/index.html)
 - **ToDoアプリ:** [https://youki-dmp.github.io/250801_cursor/todo-docs/index.html](https://youki-dmp.github.io/250801_cursor/todo-docs/index.html)

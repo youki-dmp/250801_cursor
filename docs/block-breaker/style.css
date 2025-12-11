@@ -1,0 +1,120 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a2e; /* Dark blue background */
+    color: white;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+#game-container {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: #000;
+}
+
+#background-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('assets/bg.png');
+    background-size: cover;
+    background-position: center;
+    z-index: 0;
+}
+
+#gameCanvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    /* Canvas background is transparent by default */
+}
+
+#ui-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none; /* Allow clicks to pass through to canvas during play */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+}
+
+#score-display {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#game-title {
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: #4fc3f7;
+    text-shadow: 0 0 10px #4fc3f7;
+}
+
+#start-message {
+    font-size: 24px;
+    animation: pulse 1.5s infinite;
+}
+
+.hidden {
+    display: none !important;
+}
+
+#game-over-screen, #win-screen {
+    background-color: rgba(0, 0, 0, 0.8);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto; /* Re-enable clicks for buttons */
+}
+
+button {
+    padding: 10px 20px;
+    font-size: 20px;
+    background-color: #4fc3f7;
+    border: none;
+    border-radius: 5px;
+    color: #000;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: transform 0.1s;
+}
+
+button:hover {
+    transform: scale(1.05);
+    background-color: #81d4fa;
+}
+
+@keyframes pulse {
+    0% { opacity: 0.5; }
+    50% { opacity: 1; }
+    100% { opacity: 0.5; }
+}
